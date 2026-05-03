@@ -2,6 +2,7 @@
 import express from "express"; // Framework Express để tạo server HTTP
 import userRoutes from "./routes/userRoutes.js"; // File định nghĩa các routes liên quan đến "tasks"
 import bookRoutes from "./routes/bookRoutes.js";
+import categoryRoutes from "./routes/categoryRoutes.js";
 // File định nghĩa các routes liên quan đến "users"
 
 import { connectDB } from "./config/db.js"; // Hàm để kết nối Database (ví dụ: MongoDB)
@@ -36,6 +37,7 @@ if (process.env.NODE_ENV === "development") {
 // Ví dụ: gọi GET http://localhost:5001/api/tasks -> sẽ chạy vào taskRoutes
 app.use("/api/users", userRoutes);
 app.use("/api/books", bookRoutes);
+app.use("/api/categorys", categoryRoutes);
 
 // Nếu đang chạy ở môi trường production thì phục vụ luôn frontend build sẵn (React/Vite/...)
 // Nghĩa là backend + frontend sẽ chạy cùng một server
