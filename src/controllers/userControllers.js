@@ -1,4 +1,3 @@
-import Task from "../models/Task.js";
 import User from "../models/User.js";
 import { transporter } from "./Email.js";
 import bcrypt from "bcrypt";
@@ -42,7 +41,7 @@ export const updateUser = async (req, res) => {
         Email,
         Password,
       },
-      { new: true } // new: true => trả về document sau khi cập nhật (mặc định là document cũ)
+      { new: true }, // new: true => trả về document sau khi cập nhật (mặc định là document cũ)
     );
 
     // Nếu không tìm thấy task nào với id đó
@@ -65,9 +64,7 @@ export const authEmail = async (req, res) => {
     const user = await User.findOne({ Email: req.params.Email });
 
     if (user) {
-      return res
-        .status(200)
-        .json({ message: "Email đã tồn tại", user });
+      return res.status(200).json({ message: "Email đã tồn tại", user });
     } else {
       return res.status(404).json({ message: "Email chưa tồn tại" });
     }
@@ -83,9 +80,7 @@ export const deleteUser = async (req, res) => {
   try {
     const deletedUser = await User.findByIdAndDelete(req.params.id);
     if (!deletedUser) {
-      return res
-        .status(404)
-        .json({ message: "Không tìm thấy nhiệm vụ" });
+      return res.status(404).json({ message: "Không tìm thấy nhiệm vụ" });
     }
     res.status(200).json(deletedUser);
   } catch (error) {
@@ -123,8 +118,7 @@ export const sendEmail = async (req, res) => {
     });
 
     res.json({
-      message:
-        "Đăng ký thành công, vui lòng kiểm tra Email để xác nhận.",
+      message: "Đăng ký thành công, vui lòng kiểm tra Email để xác nhận.",
     });
   } catch (error) {
     console.error(error);

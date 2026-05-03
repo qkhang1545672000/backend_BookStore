@@ -1,7 +1,6 @@
 // Import các thư viện cần thiết
 import express from "express"; // Framework Express để tạo server HTTP
-import roomRoutes from "./routes/roomRoutes.js"; // File định nghĩa các routes liên quan đến "tasks"
-import tenantRoutes from "./routes/tenantRoutes.js";
+import userRoutes from "./routes/userRoutes.js"; // File định nghĩa các routes liên quan đến "tasks"
 
 // File định nghĩa các routes liên quan đến "users"
 
@@ -35,8 +34,7 @@ if (process.env.NODE_ENV === "development") {
 
 // Gắn routes cho endpoint "/api/tasks"
 // Ví dụ: gọi GET http://localhost:5001/api/tasks -> sẽ chạy vào taskRoutes
-app.use("/api/rooms", roomRoutes);
-app.use("/api/tenants", tenantRoutes);
+app.use("/api/users", userRoutes);
 
 // Nếu đang chạy ở môi trường production thì phục vụ luôn frontend build sẵn (React/Vite/...)
 // Nghĩa là backend + frontend sẽ chạy cùng một server
