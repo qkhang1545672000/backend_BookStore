@@ -1,5 +1,5 @@
 import User from "../models/User.js";
-import { transporter } from "./Email.js";
+import { transporter } from "./email.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 // Hàm controller: lấy danh sách tất cả task theo filter (today, week, month, all)
