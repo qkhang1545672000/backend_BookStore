@@ -36,6 +36,7 @@ if (process.env.NODE_ENV === "development") {
 // Gắn routes cho endpoint "/api/tasks"
 // Ví dụ: gọi GET http://localhost:5001/api/tasks -> sẽ chạy vào taskRoutes
 app.use("/api/users", userRoutes);
+app.use("/uploads", express.static(path.join(process.cwd(), "src/uploads")));
 app.use("/api/books", bookRoutes);
 app.use("/api/categorys", categoryRoutes);
 

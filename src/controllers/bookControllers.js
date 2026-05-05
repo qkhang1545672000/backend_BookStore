@@ -1,18 +1,34 @@
-import Book from "../models/Book.js";
-
 /**
  * 🟢 CREATE - Thêm sách
  */
+import Book from "../models/Book.js"; // Đảm bảo bạn đã import model Book
+
 export const createBook = async (req, res) => {
   try {
-    const book = await Book.create(req.body);
+    const { title, author, price, category_id, description, stock } = req.body;
 
-    res.status(201).json({
-      message: "Tạo sách thành công",
-      data: book,
+    // Lấy đường dẫn ảnh
+    const image = req.file ? `/uploads/books/${req.file.filename}` : null;
+
+    const book = new Book({
+      title,
+      author,
+      price,
+      category_id,
+      description,
+      stock,
+      thumbnail: image,
     });
+
+    const newBook = await book.save();
+
+    // ✅ Populate đúng cách
+    const populateBook = await Book.findById(newBook._id).populate("category_id");
+
+    res.status(201).json(populateBook);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Lỗi khi tạo sách:", error);
+    res.status(500).json({ message: "Lỗi hệ thống" });
   }
 };
 

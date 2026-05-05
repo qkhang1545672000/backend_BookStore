@@ -6,10 +6,11 @@ import {
   updateBook,
   deleteBook,
 } from "../controllers/bookControllers.js";
+import uploadBookImage from "../middleware/upload.js";
 
 const router = express.Router();
 
-router.post("/", createBook);
+router.post("/", uploadBookImage.single("thumbnail"), createBook);
 router.get("/", getAllBooks);
 router.get("/:id", getBookById);
 router.put("/:id", updateBook);
