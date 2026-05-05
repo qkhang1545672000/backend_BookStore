@@ -8,7 +8,7 @@ export const createBook = async (req, res) => {
     const { title, author, price, category_id, description, stock } = req.body;
 
     // Lấy đường dẫn ảnh
-    const image = req.file ? `/uploads/books/${req.file.filename}` : null;
+    const image = req.file?.path || req.file?.secure_url || null;
 
     const book = new Book({
       title,
