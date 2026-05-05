@@ -1,39 +1,20 @@
-import path from "path";
-
-// Cấu hình nơi lưu & tên file
-import fs from "fs"; // Thêm dòng này
+import { v2 as cloudinary } from "cloudinary";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
 import multer from "multer";
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const dir = "src/uploads/books";
-
-    // Kiểm tra xem thư mục có tồn tại không
-    if (!fs.existsSync(dir)) {
-      // Nếu không, tạo thư mục (recursive: true giúp tạo cả các thư mục cha nếu chưa có)
-      fs.mkdirSync(dir, { recursive: true });
-    }
-
-    cb(null, dir);
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    cb(null, Date.now() + ext);
+// Đăng nhập vào Cloudinary bằng Key của bạn
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: "bookstore", // Thư mục này sẽ tự tạo trên Cloudinary
+    allowed_formats: ["jpg", "png", "jpeg"],
   },
 });
 
-// Chỉ cho phép ảnh
-const fileFilter = (req, file, cb) => {
-  if (file.mimetype.startsWith("image/")) {
-    cb(null, true);
-  } else {
-    cb(new Error("Chỉ được upload file ảnh"), false);
-  }
-};
-
-const uploadBookImage = multer({
-  storage,
-  fileFilter,
-});
-
+const uploadBookImage = multer({ storage });
 export default uploadBookImage;
