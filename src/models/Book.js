@@ -21,7 +21,10 @@ const bookSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Category",
   },
-  thumbnail: String,
+  thumbnail: {
+    type: String,
+    required: true,
+  },
 });
 
 export default mongoose.models.Book || mongoose.model("Book", bookSchema);
