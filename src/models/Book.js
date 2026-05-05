@@ -7,6 +7,7 @@ const bookSchema = new mongoose.Schema({
   },
   author: {
     type: String,
+    required: true,
   },
   description: String,
   price: {
@@ -20,6 +21,7 @@ const bookSchema = new mongoose.Schema({
   category_id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Category",
+    required: true,
   },
   thumbnail: {
     type: String,
