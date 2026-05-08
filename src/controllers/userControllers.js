@@ -66,15 +66,13 @@ export const logIn = async (req, res) => {
     if (!passwordCorrect) {
       return res.status(401).json({ message: "username hoặc password không chính xác" });
     }
-    // tạo session
-    req.session.user = {
-      id: user._id,
-      username: user.username,
-    };
 
     return res.status(200).json({
       message: "Đăng nhập thành công",
-      session: req.session.user,
+      data: {
+        id: user._id,
+        username: user.username,
+      },
     });
   } catch (error) {
     console.error("Lỗi khi gọi logIn", error);
