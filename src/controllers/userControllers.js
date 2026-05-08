@@ -37,6 +37,39 @@ export const createUser = async (req, res) => {
     res.status(500).json({ message: "Lỗi hệ thống do thiếu mật khẩu, hay tài khoản" });
   }
 };
+export const signIn = async (req, res) => {
+  try {
+    // lấy inputs
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({ message: "Thiếu username hoặc password." });
+    }
+
+    // lấy hashedPassword trong db để so với password input
+    const user = await User.findOne({ username });
+
+    console.log("username nhận được:", username);
+    if (!user) {
+      return res.status(401).json({ message: "username hoặc password không chính xác" });
+    }
+
+    // kiểm tra password
+    const passwordCorrect = await bcrypt.compare(password, user.password);
+
+    if (!passwordCorrect) {
+      return res.status(401).json({ message: "username hoặc password không chính xác" });
+    }
+
+    // trả refresh token về trong cookie
+
+    // trả access token về trong res
+    return res.status(200).json({ message: `User ${user.username} đã logged in!` });
+  } catch (error) {
+    console.error("Lỗi khi gọi signIn", error);
+    return res.status(500).json({ message: "Lỗi hệ thống" });
+  }
+};
 
 // Hàm controller để cập nhật 1 user theo id
 export const updateUser = async (req, res) => {
