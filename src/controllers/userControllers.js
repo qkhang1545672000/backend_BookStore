@@ -32,7 +32,10 @@ export const register = async (req, res) => {
 
     res.status(201).json({
       message: "Tạo user thành công",
-      data: newUser,
+      data: {
+        _id: newUser._id,
+        username: newUser.username,
+      },
     });
   } catch (error) {
     console.error("lỗi khi gọi createUser", error);
