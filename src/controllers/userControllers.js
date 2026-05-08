@@ -48,7 +48,7 @@ export const logIn = async (req, res) => {
     const { username, password } = req.body;
 
     if (!username || !password) {
-      return res.status(400).json({ message: "Thiếu username hoặc password." });
+      return res.status(400).json({ message: "Thiếu username hoặc password" });
     }
 
     // lấy hashedPassword trong db để so với password input
