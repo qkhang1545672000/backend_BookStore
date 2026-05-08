@@ -34,7 +34,7 @@ export const createUser = async (req, res) => {
     });
   } catch (error) {
     console.error("lỗi khi gọi createUser", error);
-    res.status(500).json({ message: "Lỗi hệ thống do thiếu mật khẩu , hay tài khoản" });
+    res.status(500).json({ message: "Lỗi hệ thống do thiếu mật khẩu, hay tài khoản" });
   }
 };
 
