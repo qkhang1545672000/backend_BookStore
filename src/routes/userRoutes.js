@@ -4,7 +4,8 @@ dotenv.config();
 
 import {
   getAllUsers,
-  createUser,
+  logIn,
+  register,
   updateUser,
   deleteUser,
   authEmail,
@@ -14,7 +15,8 @@ import {
 
 const router = express.Router();
 router.get("/", getAllUsers);
-router.post("/", createUser);
+router.post("/register", register);
+router.post("/login", logIn);
 router.put("/:id", updateUser);
 router.delete("/:id", deleteUser);
 router.get("/auth/:Email", authEmail);

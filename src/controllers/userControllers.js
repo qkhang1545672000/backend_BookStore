@@ -13,7 +13,7 @@ export const getAllUsers = async (req, res) => {
   }
 };
 // Hàm đăng ký user mới (tạo user mới)
-export const createUser = async (req, res) => {
+export const register = async (req, res) => {
   try {
     const { username, password } = req.body;
     const exists = await User.findOne({ username });
@@ -37,7 +37,7 @@ export const createUser = async (req, res) => {
     res.status(500).json({ message: "Lỗi hệ thống do thiếu mật khẩu, hay tài khoản" });
   }
 };
-export const signIn = async (req, res) => {
+export const logIn = async (req, res) => {
   try {
     // lấy inputs
     const { username, password } = req.body;
