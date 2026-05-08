@@ -18,7 +18,7 @@ export const register = async (req, res) => {
     const { username, password } = req.body;
     const exists = await User.findOne({ username });
     if (!username || !password) {
-      return res.status(400).json({ message: "Thiếu username hoặc password." });
+      return res.status(400).json({ message: "Thiếu username hoặc password" });
     }
     if (exists) {
       return res.status(400).json({ message: "Tài khoản đã tồn tại" });
