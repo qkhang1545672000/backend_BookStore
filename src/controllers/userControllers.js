@@ -12,16 +12,26 @@ export const getAllUsers = async (req, res) => {
     res.status(500).json({ message: "Lỗi hệ thống" });
   }
 };
-
+// Hàm đăng ký user mới (tạo user mới)
 export const createUser = async (req, res) => {
   try {
-    // CÁCH 1: const newTask = await Task.create({ title: "Học Mongoose" }); Viết gọn
+    const { username, password } = req.body;
+    const exists = await User.findOne({ username });
 
-    const { email, password } = req.body;
-    const user = new User({ Email: email, Password: password });
+    if (exists) {
+      return res.status(400).json({ message: "Tài khoản đã tồn tại" });
+    }
+    // 2️⃣ Mã hóa mật khẩu
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    const user = new User({ username, password: hashedPassword });
     const newUser = await user.save();
 
-    res.status(201).json(newUser);
+    res.status(201).json({
+      message: "Tạo user thành công",
+      data: newUser,
+    });
   } catch (error) {
     console.error("lỗi khi gọi createUser", error);
     res.status(500).json({ message: "Lỗi hệ thống" });
