@@ -6,6 +6,7 @@ import { connectDB } from "./config/db.js";
 import bookRoutes from "./routes/bookRoutes.js";
 import categoryRoutes from "./routes/categoryRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
+import session from "express-session";
 
 dotenv.config();
 
@@ -14,7 +15,18 @@ const __dirname = path.resolve();
 const app = express();
 
 app.use(express.json());
+app.use(
+  session({
+    secret: "my-secret-key",
+    resave: false,
+    saveUninitialized: false,
 
+    cookie: {
+      secure: false, // true nếu dùng https
+      maxAge: 1000 * 60 * 60, // 1 giờ
+    },
+  }),
+);
 if (process.env.NODE_ENV === "development") {
   app.use(cors({ origin: "http://localhost:5173" }));
 }

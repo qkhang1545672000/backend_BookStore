@@ -17,7 +17,9 @@ export const register = async (req, res) => {
   try {
     const { username, password } = req.body;
     const exists = await User.findOne({ username });
-
+    if (!username || !password) {
+      return res.status(400).json({ message: "Thiếu username hoặc password." });
+    }
     if (exists) {
       return res.status(400).json({ message: "Tài khoản đã tồn tại" });
     }
@@ -34,7 +36,7 @@ export const register = async (req, res) => {
     });
   } catch (error) {
     console.error("lỗi khi gọi createUser", error);
-    res.status(500).json({ message: "Lỗi hệ thống do thiếu mật khẩu, hay tài khoản" });
+    res.status(500).json({ message: "Lỗi hệ thống" });
   }
 };
 export const logIn = async (req, res) => {
@@ -56,17 +58,23 @@ export const logIn = async (req, res) => {
 
     // kiểm tra password
     const passwordCorrect = await bcrypt.compare(password, user.password);
+    console.log("passwordCorrect:", passwordCorrect);
 
     if (!passwordCorrect) {
       return res.status(401).json({ message: "username hoặc password không chính xác" });
     }
+    // tạo session
+    req.session.user = {
+      id: user._id,
+      username: user.username,
+    };
 
-    // trả refresh token về trong cookie
-
-    // trả access token về trong res
-    return res.status(200).json({ message: `User ${user.username} đã logged in!` });
+    return res.status(200).json({
+      message: "Đăng nhập thành công",
+      session: req.session.user,
+    });
   } catch (error) {
-    console.error("Lỗi khi gọi signIn", error);
+    console.error("Lỗi khi gọi logIn", error);
     return res.status(500).json({ message: "Lỗi hệ thống" });
   }
 };
