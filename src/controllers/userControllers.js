@@ -1,77 +1,112 @@
-import User from "../models/User.js";
-import { transporter } from "./email.js";
 import bcrypt from "bcrypt";
+import db from "../config/db.js";
+import { transporter } from "./email.js"; // Đảm bảo đường dẫn đúng đến file email.js
 
-// Hàm controller: lấy danh sách tất cả task theo filter (today, week, month, all)
+// 1. Lấy danh sách tất cả user
 export const getAllUsers = async (req, res) => {
-  try {
-    const user = await User.find(); // SELECT *
-    res.status(201).json(user);
+  try { 
+    // Sửa thành bảng 'users'
+    const [users] = await db.query("SELECT id, username, email, role, full_name, phone,address FROM users");
+    res.status(200).json(users);
   } catch (error) {
     console.error("lỗi khi gọi getAllUsers", error);
     res.status(500).json({ message: "Lỗi hệ thống" });
   }
 };
-// Hàm đăng ký user mới (tạo user mới)
+
+// 2. Đăng ký (Register)
+
 export const register = async (req, res) => {
   try {
-    const { username, password } = req.body;
-    const exists = await User.findOne({ username });
-    if (!username || !password) {
-      return res.status(400).json({ message: "Thiếu username hoặc password" });
+    const { username, email, password } = req.body;
+    if (!username || !email || !password) {
+      return res.status(400).json({ message: "Thiếu thông tin đăng ký" });
     }
-    if (exists) {
-      return res.status(400).json({ message: "Tài khoản đã tồn tại" });
-    }
-    // 2️⃣ Mã hóa mật khẩu
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    const user = new User({ username, password: hashedPassword });
-    const newUser = await user.save();
+    const [existingUsers] = await db.query("SELECT * FROM users WHERE username = ? OR email = ?", [
+      username, email
+    ]);
+    if (existingUsers.length > 0) {
+      return res.status(400).json({ message: "Username hoặc Email đã tồn tại" });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    // Khi đăng ký, ta để is_active = 0 (đang chờ xác thực)
+    const [result] = await db.query(
+      "INSERT INTO users (username, email, password_hash, is_active) VALUES (?, ?, ?, ?)",
+      [username, email, hashedPassword, 0], 
+    );
+
+    // Cấu hình nội dung Email
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Xác nhận đăng ký tài khoản Bookstore",
+      html: `
+        <h1>Chào mừng ${username}!</h1>
+        <p>Cảm ơn bạn đã đăng ký tài khoản tại Bookstore.</p>
+        <p>Vui lòng nhấn vào đây để kích hoạt tài khoản của bạn:</p>
+       <p><a href="http://localhost:21926/api/users/verify/${result.insertId}">để xác thực.</a> </p>
+      `,
+    };
+
+    // Gửi email
+    await transporter.sendMail(mailOptions);
 
     res.status(201).json({
-      message: "Tạo user thành công",
-      data: {
-        _id: newUser._id,
-        username: newUser.username,
-      },
+      message: "Đăng ký thành công! Vui lòng kiểm tra email để kích hoạt tài khoản.",
+      data: { id: result.insertId, username, email },
     });
   } catch (error) {
-    console.error("lỗi khi gọi createUser", error);
-    res.status(500).json({ message: "Lỗi hệ thống" });
+    console.error("Lỗi:", error);
+    res.status(500).json({ message: "Lỗi hệ thống khi đăng ký" });
+  }
+}; 
+export const verifyUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const [result] = await db.query("UPDATE users SET is_active = 1 WHERE id = ?", [id]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).send("<h1>Liên kết không hợp lệ hoặc đã hết hạn</h1>");
+    }
+
+    res.send("<h1>Xác thực thành công! Bạn hiện đã có thể đăng nhập.</h1>");
+  } catch (error) {
+    res.status(500).send("Lỗi xác thực");
   }
 };
+
+// 3. Đăng nhập (Login)
 export const logIn = async (req, res) => {
   try {
-    // lấy inputs
     const { username, password } = req.body;
-
     if (!username || !password) {
       return res.status(400).json({ message: "Thiếu username hoặc password" });
     }
 
-    // lấy hashedPassword trong db để so với password input
-    const user = await User.findOne({ username });
+    // Tìm user bằng username trong bảng 'users'
+    const [users] = await db.query("SELECT * FROM users WHERE username = ?", [username]);
+    const user = users[0];
 
-    console.log("username nhận được:", username);
     if (!user) {
-      return res.status(401).json({ message: "username hoặc password không chính xác" });
+      return res.status(401).json({ message: "Username hoặc password không chính xác" });
     }
 
-    // kiểm tra password
-    const passwordCorrect = await bcrypt.compare(password, user.password);
-    console.log("passwordCorrect:", passwordCorrect);
-
+    // So sánh password với cột 'password_hash' từ DB
+    const passwordCorrect = await bcrypt.compare(password, user.password_hash);
     if (!passwordCorrect) {
-      return res.status(401).json({ message: "username hoặc password không chính xác" });
+      return res.status(401).json({ message: "Username hoặc password không chính xác" });
     }
 
     return res.status(200).json({
       message: "Đăng nhập thành công",
-      data: {
-        id: user._id,
+      data: { 
+        id: user.id, 
         username: user.username,
+        role: user.role 
       },
     });
   } catch (error) {
@@ -80,113 +115,85 @@ export const logIn = async (req, res) => {
   }
 };
 
-// Hàm controller để cập nhật 1 user theo id
+// 4. Cập nhật User
 export const updateUser = async (req, res) => {
   try {
-    // Lấy dữ liệu từ body request (client gửi lên)
-    const { Email, Password } = req.body;
+    const { username, email,full_name,phone,address} = req.body;
+    const { id } = req.params;
+    
+    const sqlUserExists = `SELECT * FROM users WHERE id = ?`;
 
-    // Tìm task theo id (req.params.id) và cập nhật dữ liệu mới
-    const updatedUser = await User.findByIdAndUpdate(
-      req.params.id, // id lấy từ URL (ví dụ: /tasks/66ec1f3a7a...)
-      {
-        Email,
-        Password,
-      },
-      { new: true }, // new: true => trả về document sau khi cập nhật (mặc định là document cũ)
-    );
+    const [resultUserExists] = await db.query(sqlUserExists, id);
 
-    // Nếu không tìm thấy task nào với id đó
-    if (!updatedUser) {
-      return res
-        .status(404) // Trả về HTTP 404 Not Found
-        .json({ message: "Không tìm thấy nhiệm vụ" });
-    } else {
-      // Nếu tìm thấy và cập nhật thành công, trả về task mới
-      res.status(200).json(updatedUser);
+    if (resultUserExists.affectedRows === 0) {
+      return res.status(404).json({ message: "Cập nhật không thành công" });
     }
-  } catch (error) {
-    // Nếu có lỗi (id sai, DB lỗi, ...)
-    console.error("lỗi khi gọi updateUser", error);
-    res.status(500).json({ message: "Lỗi hệ thống" }); // Trả về HTTP 500 Internal Server Error
-  }
-};
-export const authEmail = async (req, res) => {
-  try {
-    const user = await User.findOne({ Email: req.params.Email });
+  
+    let fields = []; 
+    let params = []; 
 
-    if (user) {
-      return res.status(200).json({ message: "Email đã tồn tại", user });
-    } else {
-      return res.status(404).json({ message: "Email chưa tồn tại" });
+   
+    if (username) {
+      fields.push("username = ?");
+      params.push(username);
     }
-  } catch (error) {
-    res.status(500).json({ message: "Lỗi server", error });
-  }
-};
 
-// router.post("/login", async (req, res) => {
-//   const { Email, Password } = req.body;
-
-export const deleteUser = async (req, res) => {
-  try {
-    const deletedUser = await User.findByIdAndDelete(req.params.id);
-    if (!deletedUser) {
-      return res.status(404).json({ message: "Không tìm thấy nhiệm vụ" });
+    if (email) {
+      fields.push("email = ?");
+      params.push(email);
     }
-    res.status(200).json(deletedUser);
+
+    if (full_name) {
+    
+      fields.push("full_name = ?");
+      params.push(full_name);
+    } 
+    if (phone) {
+     
+      fields.push("phone = ?");
+      params.push(phone);
+    }  
+    if (address) {
+     
+      fields.push("address = ?");
+      params.push(address);
+    } 
+    
+
+    
+    if (fields.length === 0) {
+      return res.status(400).json({ message: "Không có dữ liệu nào để cập nhật" });
+    }
+
+   
+    params.push(id);
+
+    
+    const sql = `UPDATE users SET ${fields.join(", ")} WHERE id = ?`;
+
+    const [result] = await db.query(sql, params);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Không tìm thấy người dùng để cập nhật" });
+    }
+
+    res.status(200).json({ message: "Cập nhật thành công" });
   } catch (error) {
-    console.error("lỗi khi gọi deleteUser", error);
+    console.error("Lỗi khi gọi updateUser:", error);
     res.status(500).json({ message: "Lỗi hệ thống" });
   }
 };
-export const sendEmail = async (req, res) => {
+
+// 6. Xóa User
+export const deleteUser = async (req, res) => {
   try {
-    const { email, password } = req.body;
-
-    // mã hóa Password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // tạo user mới
-    const user = await User.create({
-      Email: email,
-      Password: hashedPassword,
-    });
-
-    // tạo token xác thực (hết hạn sau 1 ngày)
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "1d",
-    });
-
-    // link xác nhận
-    const verifyLink = `http://localhost:5000/api/verify/${token}`;
-
-    // gửi Email
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: "Xác nhận Email",
-      html: `<h1>Chào bạn!</h1><p>Nhấn vào link sau để xác nhận Email:</p><a href="${verifyLink}">${verifyLink}</a>`,
-    });
-
-    res.json({
-      message: "Đăng ký thành công, vui lòng kiểm tra Email để xác nhận.",
-    });
+    const [result] = await db.query("DELETE FROM users WHERE id = ?", [req.params.id]);
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Không tìm thấy user" });
+    }
+    res.status(200).json({ message: "Xóa user thành công" });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Lỗi đăng ký" });
-  }
-};
-export const verifyEmail = async (req, res) => {
-  try {
-    const { token } = req.params;
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    await User.findByIdAndUpdate(decoded.id, { verified: true });
-
-    res.send("Xác nhận Email thành công! Bạn có thể đăng nhập.");
-  } catch (error) {
-    console.error(error);
-    res.status(400).send("Token không hợp lệ hoặc đã hết hạn.");
+    console.error("lỗi khi gọi deleteUser", error);
+    res.status(500).json({ message: "Lỗi hệ thống" });
   }
 };

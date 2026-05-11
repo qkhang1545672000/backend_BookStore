@@ -2,7 +2,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
 import path from "path";
-import { connectDB } from "./config/db.js";
+import db from "./config/db.js";
 import bookRoutes from "./routes/bookRoutes.js";
 import categoryRoutes from "./routes/categoryRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
@@ -15,6 +15,10 @@ const __dirname = path.resolve();
 const app = express();
 
 app.use(express.json());
+
+app.listen(3000, () => {
+  console.log("Server đang chạy tại http://localhost:3000");
+});
 app.use(
   session({
     secret: "my-secret-key",
@@ -43,8 +47,6 @@ if (process.env.NODE_ENV === "production") {
     res.sendFile(path.join(__dirname, "../frontend/dist/index.html"));
   });
 }
-
-await connectDB();
 
 if (!process.env.VERCEL) {
   app.listen(PORT, () => {

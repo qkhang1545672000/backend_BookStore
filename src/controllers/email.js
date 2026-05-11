@@ -7,4 +7,4 @@ export const transporter = nodemailer.createTransport({
     user: process.env.EMAIL_USER, // email của bạn
     pass: process.env.EMAIL_PASS, // app password
   },
-});
+});  
