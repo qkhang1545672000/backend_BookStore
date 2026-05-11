@@ -10,7 +10,7 @@ export const getAllUsers = async (req, res) => {
     res.status(200).json(users);
   } catch (error) {
     console.error("lỗi khi gọi getAllUsers", error);
-    res.status(500).json({ message: "Lỗi hệ thống" });
+    res.status(500).json({ message: "Lỗi hệ thống2" });
   }
 };
 
