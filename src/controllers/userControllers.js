@@ -4,13 +4,15 @@ import { transporter } from "./email.js"; // Đảm bảo đường dẫn đúng
 
 // 1. Lấy danh sách tất cả user
 export const getAllUsers = async (req, res) => {
-  try { 
+  try {
     // Sửa thành bảng 'users'
-    const [users] = await db.query("SELECT id, username, email, role, full_name, phone,address FROM users");
+    const [users] = await db.query(
+      "SELECT id, username, email, role, full_name, phone,address FROM users",
+    );
     res.status(200).json(users);
   } catch (error) {
     console.error("lỗi khi gọi getAllUsers", error);
-    res.status(500).json({ message: "Lỗi hệ thống2" });
+    res.status(500).json({ message: "Lỗi hệ thống" });
   }
 };
 
@@ -18,24 +20,25 @@ export const getAllUsers = async (req, res) => {
 
 export const register = async (req, res) => {
   try {
-    const { username, email, password } = req.body;
-    if (!username || !email || !password) {
+    const { username, email, password, full_name } = req.body;
+    if (!username || !email || !password || !full_name) {
       return res.status(400).json({ message: "Thiếu thông tin đăng ký" });
     }
 
-    const [existingUsers] = await db.query("SELECT * FROM users WHERE username = ? OR email = ?", [
-      username, email
-    ]);
+    const [existingUsers] = await db.query(
+      "SELECT * FROM users WHERE username = ? OR email = ?",
+      [username, email],
+    );
     if (existingUsers.length > 0) {
       return res.status(400).json({ message: "Username hoặc Email đã tồn tại" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    
+
     // Khi đăng ký, ta để is_active = 0 (đang chờ xác thực)
     const [result] = await db.query(
-      "INSERT INTO users (username, email, password_hash, is_active) VALUES (?, ?, ?, ?)",
-      [username, email, hashedPassword, 0], 
+      "INSERT INTO users (username, email,full_name, password_hash, is_active) VALUES (?, ?, ?, ?, ?)",
+      [username, email, full_name, hashedPassword, 0],
     );
 
     // Cấu hình nội dung Email
@@ -47,7 +50,7 @@ export const register = async (req, res) => {
         <h1>Chào mừng ${username}!</h1>
         <p>Cảm ơn bạn đã đăng ký tài khoản tại Bookstore.</p>
         <p>Vui lòng nhấn vào đây để kích hoạt tài khoản của bạn:</p>
-       <p><a href="http://localhost:21926/api/users/verify/${result.insertId}">để xác thực.</a> </p>
+       <p><a href="https://bookking000.vercel.app/api/users/verify/${result.insertId}">để xác thực.</a> </p>
       `,
     };
 
@@ -62,11 +65,11 @@ export const register = async (req, res) => {
     console.error("Lỗi:", error);
     res.status(500).json({ message: "Lỗi hệ thống khi đăng ký" });
   }
-}; 
+};
 export const verifyUser = async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     const [result] = await db.query("UPDATE users SET is_active = 1 WHERE id = ?", [id]);
 
     if (result.affectedRows === 0) {
@@ -103,10 +106,10 @@ export const logIn = async (req, res) => {
 
     return res.status(200).json({
       message: "Đăng nhập thành công",
-      data: { 
-        id: user.id, 
+      data: {
+        id: user.id,
         username: user.username,
-        role: user.role 
+        role: user.role,
       },
     });
   } catch (error) {
@@ -118,9 +121,9 @@ export const logIn = async (req, res) => {
 // 4. Cập nhật User
 export const updateUser = async (req, res) => {
   try {
-    const { username, email,full_name,phone,address} = req.body;
+    const { username, email, full_name, phone, address } = req.body;
     const { id } = req.params;
-    
+
     const sqlUserExists = `SELECT * FROM users WHERE id = ?`;
 
     const [resultUserExists] = await db.query(sqlUserExists, id);
@@ -128,11 +131,10 @@ export const updateUser = async (req, res) => {
     if (resultUserExists.affectedRows === 0) {
       return res.status(404).json({ message: "Cập nhật không thành công" });
     }
-  
-    let fields = []; 
-    let params = []; 
 
-   
+    let fields = [];
+    let params = [];
+
     if (username) {
       fields.push("username = ?");
       params.push(username);
@@ -144,31 +146,24 @@ export const updateUser = async (req, res) => {
     }
 
     if (full_name) {
-    
       fields.push("full_name = ?");
       params.push(full_name);
-    } 
+    }
     if (phone) {
-     
       fields.push("phone = ?");
       params.push(phone);
-    }  
+    }
     if (address) {
-     
       fields.push("address = ?");
       params.push(address);
-    } 
-    
+    }
 
-    
     if (fields.length === 0) {
       return res.status(400).json({ message: "Không có dữ liệu nào để cập nhật" });
     }
 
-   
     params.push(id);
 
-    
     const sql = `UPDATE users SET ${fields.join(", ")} WHERE id = ?`;
 
     const [result] = await db.query(sql, params);
