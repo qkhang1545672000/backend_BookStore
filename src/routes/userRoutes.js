@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import {
-  getAllUsers, 
+  getAllUsers,
   verifyUser,
   logIn,
   register,
@@ -12,11 +12,11 @@ import {
 } from "../controllers/userControllers.js";
 
 const router = express.Router();
-router.get("/", getAllUsers); 
-router.get("/verify/:id", verifyUser);
+router.get("/", getAllUsers);
+router.get("/verify/:userid", verifyUser);
 router.post("/register", register);
 router.post("/login", logIn);
-router.put("/:id", updateUser);
-router.delete("/:id", deleteUser); 
+router.put("/:userid", updateUser);
+router.delete("/:id", deleteUser);
 
 export default router;

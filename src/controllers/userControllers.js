@@ -68,9 +68,11 @@ export const register = async (req, res) => {
 };
 export const verifyUser = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { userid } = req.params;
 
-    const [result] = await db.query("UPDATE users SET is_active = 1 WHERE id = ?", [id]);
+    const [result] = await db.query("UPDATE users SET is_active = 1 WHERE id = ?", [
+      userid,
+    ]);
 
     if (result.affectedRows === 0) {
       return res.status(404).send("<h1>Liên kết không hợp lệ hoặc đã hết hạn</h1>");
@@ -122,11 +124,11 @@ export const logIn = async (req, res) => {
 export const updateUser = async (req, res) => {
   try {
     const { username, email, full_name, phone, address } = req.body;
-    const { id } = req.params;
+    const { userid } = req.params;
 
     const sqlUserExists = `SELECT * FROM users WHERE id = ?`;
 
-    const [resultUserExists] = await db.query(sqlUserExists, id);
+    const [resultUserExists] = await db.query(sqlUserExists, userid);
 
     if (resultUserExists.affectedRows === 0) {
       return res.status(404).json({ message: "Cập nhật không thành công" });
