@@ -7,7 +7,7 @@ export const getAllUsers = async (req, res) => {
   try {
     // Sửa thành bảng 'users'
     const [users] = await db.query(
-      "SELECT id, username, email, role, full_name, phone,address FROM users",
+      "SELECT id, username, email, avatar, role, full_name, phone, address FROM users",
     );
     res.status(200).json(users);
   } catch (error) {
