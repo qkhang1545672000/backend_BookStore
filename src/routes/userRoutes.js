@@ -9,12 +9,14 @@ import {
   register,
   updateUser,
   deleteUser,
+  changPassword,
 } from "../controllers/userControllers.js";
 import uploadImage from "../middleware/upload.js";
 
 const router = express.Router();
 router.get("/", getAllUsers);
-router.get("/verify/:userid", verifyUser);
+router.get("/verify/:userid", verifyUser); 
+router.put("/changepassword/:userid",changPassword)
 router.post("/register", register);
 router.post("/login", logIn);
 // Route cập nhật User
