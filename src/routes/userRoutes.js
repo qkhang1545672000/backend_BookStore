@@ -10,6 +10,7 @@ import {
   updateUser,
   deleteUser,
   changPassword,
+  googleLogin,
 } from "../controllers/userControllers.js";
 import uploadImage from "../middleware/upload.js";
 
@@ -18,7 +19,8 @@ router.get("/", getAllUsers);
 router.get("/verify/:userid", verifyUser); 
 router.put("/changepassword/:userid",changPassword)
 router.post("/register", register);
-router.post("/login", logIn);
+router.post("/login", logIn); 
+router.post("/login/google", googleLogin);
 // Route cập nhật User
 router.put(
   "/update/:userid",

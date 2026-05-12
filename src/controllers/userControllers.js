@@ -1,7 +1,9 @@
 import bcrypt from "bcrypt";
 import db from "../config/db.js";
 import { transporter } from "./email.js"; // Đảm bảo đường dẫn đúng đến file email.js
+import { OAuth2Client } from "google-auth-library"; 
 
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 // 1. Lấy danh sách tất cả user
 export const getAllUsers = async (req, res) => {
   try {
@@ -201,7 +203,6 @@ export const deleteUser = async (req, res) => {
 }; 
 
 // 7. Đổi mật khẩu 
-
 export const changPassword = async (req, res) => {
   try {
     const { oldPassword, newPassword } = req.body;
@@ -244,5 +245,45 @@ export const changPassword = async (req, res) => {
   } catch (error) {
     console.error("Lỗi khi gọi changPassword:", error);
     return res.status(500).json({ message: "Lỗi hệ thống" });
+  }
+}; 
+
+// 8. Đăng nhập bằng google
+export const googleLogin = async (req, res) => {
+  try {
+    const { idToken } = req.body; // Token này do FE nhận từ Google rồi gửi cho bạn
+
+    // Xác thực token với Google
+    const ticket = await client.verifyIdToken({
+      idToken: idToken,
+      audience: process.env.GOOGLE_CLIENT_ID, 
+    });
+
+    const payload = ticket.getPayload();
+    const { email, name, picture } = payload;
+
+    // Kiểm tra và lưu vào Database của bạn
+    let [users] = await db.query("SELECT * FROM users WHERE email = ?", [email]);
+    let user = users[0];
+
+    if (!user) {
+      // Nếu chưa có user thì INSERT mới vào DB
+      const [result] = await db.query(
+        "INSERT INTO users (username, email, full_name, avatar, role, is_active) VALUES (?, ?, ?, ?, 'customer', 1)",
+        [email.split('@')[0], email, name, picture]
+      );
+      // ... lấy user vừa tạo ...
+    }
+
+    // Trả về thông tin cho Frontend
+    res.status(200).json({
+      success: true,
+      message: "Xác thực Google thành công",
+      user: { id: user.id, username: user.username, avatar: user.avatar }
+    });
+
+  } catch (error) {
+    console.error("Lỗi xác thực:", error);
+    res.status(401).json({ message: "Xác thực không hợp lệ" });
   }
 };
