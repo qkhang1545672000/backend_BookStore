@@ -17,7 +17,23 @@ router.get("/", getAllUsers);
 router.get("/verify/:userid", verifyUser);
 router.post("/register", register);
 router.post("/login", logIn);
-router.put("/:userid", uploadImage.single("avatar"), updateUser);
+// Route cập nhật User
+router.put(
+  "/update/:userid",
+  (req, res, next) => {
+    uploadImage.single("avatar")(req, res, (err) => {
+      if (err) {
+        // Bắt lỗi và trả về JSON thay vì HTML
+        return res.status(400).json({
+          message: "chỉ tải ảnh dạng jpg,png, jpeg." || err.message,
+        });
+      }
+      // Nếu ổn, đi tiếp sang controller updateUser
+      next();
+    });
+  },
+  updateUser,
+);
 router.delete("/:id", deleteUser);
 
 export default router;
