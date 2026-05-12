@@ -31,10 +31,8 @@ app.use(
     },
   }),
 );
-if (process.env.NODE_ENV === "development") {
-  app.use(cors({ origin: "http://localhost:5173" }));
-}
 
+app.use(cors({ origin: "http://localhost:5173" }));
 app.use("/api/users", userRoutes);
 app.use("/uploads", express.static(path.join(process.cwd(), "src/uploads")));
 app.use("/api/books", bookRoutes);

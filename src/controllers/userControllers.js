@@ -268,11 +268,20 @@ export const googleLogin = async (req, res) => {
 
     if (!user) {
       // Nếu chưa có user thì INSERT mới vào DB
-      const [result] = await db.query(
-        "INSERT INTO users (username, email, full_name, avatar, role, is_active) VALUES (?, ?, ?, ?, 'customer', 1)",
-        [email.split('@')[0], email, name, picture]
-      );
-      // ... lấy user vừa tạo ...
+     const [result] = await db.query(
+  // 1. Thêm password_hash vào danh sách cột
+  "INSERT INTO users (username, email, full_name, avatar, role, is_active, password_hash) VALUES (?, ?, ?, ?, 'customer', 1, ?)",
+  [
+    email.split('@')[0], 
+    email, 
+    name, 
+    picture, 
+    "GOOGLE_AUTH_NO_PASSWORD" // 2. Truyền giá trị này vào dấu ? cuối cùng
+  ]
+);
+    
+  const [newUser] = await db.query("SELECT * FROM users WHERE id = ?", [result.insertId]);
+  user = newUser[0]; // Gán lại cho biến user
     }
 
     // Trả về thông tin cho Frontend
