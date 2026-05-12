@@ -16,5 +16,24 @@ const storage = new CloudinaryStorage({
   },
 });
 
-const uploadImage = multer({ storage });
+const uploadImage = multer({
+  storage: storage,
+  fileFilter: (req, file, cb) => {
+    // Kiểm tra định dạng file thực tế
+    if (
+      file.mimetype === "image/jpeg" ||
+      file.mimetype === "image/png" ||
+      file.mimetype === "image/jpg"
+    ) {
+      cb(null, true); // Chấp nhận file
+    } else {
+      cb(
+        new Error(
+          "Hệ thống chỉ chấp nhận ảnh định dạng JPG, PNG hoặc JPEG thôi bạn nhé!",
+        ),
+        false,
+      ); // Từ chối và ném lỗi
+    }
+  },
+});
 export default uploadImage;

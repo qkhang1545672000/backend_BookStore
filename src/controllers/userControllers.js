@@ -145,57 +145,38 @@ export const updateUser = async (req, res) => {
     const { userid } = req.params;
     const avatar = req.file?.path || req.file?.secure_url || null;
 
-    const sqlUserExists = `SELECT * FROM users WHERE id = ?`;
+    // 1. Kiểm tra user tồn tại (Sửa .length)
+    const [resultUserExists] = await db.query("SELECT id FROM users WHERE id = ?", [
+      userid,
+    ]);
 
-    const [resultUserExists] = await db.query(sqlUserExists, userid);
-
-    if (resultUserExists.affectedRows === 0) {
-      return res.status(404).json({ message: "Cập nhật không thành công" });
+    if (resultUserExists.length === 0) {
+      return res.status(404).json({ message: "Người dùng không tồn tại" });
     }
 
+    // 2. Xây dựng câu lệnh Update động
     let fields = [];
     let params = [];
 
-    if (username) {
-      fields.push("username = ?");
-      params.push(username);
-    }
+    const updateData = { username, email, full_name, phone, address, avatar };
 
-    if (email) {
-      fields.push("email = ?");
-      params.push(email);
-    }
-
-    if (full_name) {
-      fields.push("full_name = ?");
-      params.push(full_name);
-    }
-    if (phone) {
-      fields.push("phone = ?");
-      params.push(phone);
-    }
-    if (address) {
-      fields.push("address = ?");
-      params.push(address);
-    }
-    if (avatar) {
-      fields.push("avatar = ?");
-      params.push(avatar);
+    for (const [key, value] of Object.entries(updateData)) {
+      if (value !== undefined && value !== null) {
+        // Chỉ cập nhật nếu có dữ liệu
+        fields.push(`${key} = ?`);
+        params.push(value);
+      }
     }
 
     if (fields.length === 0) {
       return res.status(400).json({ message: "Không có dữ liệu nào để cập nhật" });
     }
 
+    // 3. Thực thi
     params.push(userid);
-
     const sql = `UPDATE users SET ${fields.join(", ")} WHERE id = ?`;
 
     const [result] = await db.query(sql, params);
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ message: "Không tìm thấy người dùng để cập nhật" });
-    }
 
     res.status(200).json({ message: "Cập nhật thành công" });
   } catch (error) {
