@@ -11,10 +11,10 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
-    folder: "bookstore", // Thư mục này sẽ tự tạo trên Cloudinary
+    folder: "avatar", // Thư mục này sẽ tự tạo trên Cloudinary
     allowed_formats: ["jpg", "png", "jpeg"],
   },
 });
 
-const uploadBookImage = multer({ storage });
-export default uploadBookImage;
+const uploadImage = multer({ storage });
+export default uploadImage;

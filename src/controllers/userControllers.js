@@ -143,6 +143,7 @@ export const updateUser = async (req, res) => {
   try {
     const { username, email, full_name, phone, address } = req.body;
     const { userid } = req.params;
+    const avatar = req.file?.path || req.file?.secure_url || null;
 
     const sqlUserExists = `SELECT * FROM users WHERE id = ?`;
 
@@ -176,6 +177,10 @@ export const updateUser = async (req, res) => {
     if (address) {
       fields.push("address = ?");
       params.push(address);
+    }
+    if (avatar) {
+      fields.push("avatar = ?");
+      params.push(avatar);
     }
 
     if (fields.length === 0) {
