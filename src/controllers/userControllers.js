@@ -286,9 +286,8 @@ export const googleLogin = async (req, res) => {
 
     // Trả về thông tin cho Frontend
     res.status(200).json({
-      success: true,
       message: "Xác thực Google thành công",
-      user: { id: user.id, username: user.username, avatar: user.avatar }
+      data: { id: user.id, username: user.username, avatar: user.avatar }
     });
 
   } catch (error) {
