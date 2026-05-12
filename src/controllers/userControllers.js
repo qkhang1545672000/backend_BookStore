@@ -100,23 +100,28 @@ export const verifyUser = async (req, res) => {
 // 3. Đăng nhập (Login)
 export const logIn = async (req, res) => {
   try {
-    const { username, password } = req.body;
-    if (!username || !password) {
-      return res.status(400).json({ message: "Thiếu username hoặc password" });
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ message: "Thiếu email hoặc password" });
     }
 
-    // Tìm user bằng username trong bảng 'users'
-    const [users] = await db.query("SELECT * FROM users WHERE username = ?", [username]);
+    // Tìm user bằng email trong bảng 'users'
+    const [users] = await db.query("SELECT * FROM users WHERE email = ?", [email]);
     const user = users[0];
 
     if (!user) {
-      return res.status(401).json({ message: "Username hoặc password không chính xác" });
+      return res.status(401).json({ message: "Email hoặc mật khẩu không chính xác" });
     }
 
     // So sánh password với cột 'password_hash' từ DB
     const passwordCorrect = await bcrypt.compare(password, user.password_hash);
     if (!passwordCorrect) {
-      return res.status(401).json({ message: "Username hoặc password không chính xác" });
+      return res.status(401).json({ message: "Email hoặc mật khẩu không chính xác" });
+    }
+    if (user.is_active === 0) {
+      return res.status(403).json({
+        message: "Tài khoản chưa được kích hoạt. Vui lòng kiểm tra email để xác thực.",
+      });
     }
 
     return res.status(200).json({
