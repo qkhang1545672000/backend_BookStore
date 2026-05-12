@@ -70,17 +70,30 @@ export const verifyUser = async (req, res) => {
   try {
     const { userid } = req.params;
 
-    const [result] = await db.query("UPDATE users SET is_active = 1 WHERE id = ?", [
-      userid,
-    ]);
+    const [result] = await db.query(
+      "UPDATE users SET is_active = 1 WHERE id = ? AND is_active = 0",
+      [userid],
+    );
 
     if (result.affectedRows === 0) {
-      return res.status(404).send("<h1>Liên kết không hợp lệ hoặc đã hết hạn</h1>");
+      return res.status(400).json({
+        success: false,
+        message:
+          "Liên kết không hợp lệ, đã hết hạn hoặc tài khoản đã được kích hoạt trước đó.",
+      });
     }
 
-    res.send("<h1>Xác thực thành công! Bạn hiện đã có thể đăng nhập.</h1>");
+    // Trả về JSON để FE thích điều hướng đi đâu thì đi (ví dụ về trang login)
+    return res.status(200).json({
+      success: true,
+      message: "Xác thực thành công! Bạn hiện đã có thể đăng nhập.",
+    });
   } catch (error) {
-    res.status(500).send("Lỗi xác thực");
+    console.error("Lỗi xác thực:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi hệ thống trong quá trình xác thực.",
+    });
   }
 };
 
