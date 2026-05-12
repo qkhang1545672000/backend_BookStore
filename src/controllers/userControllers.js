@@ -164,7 +164,7 @@ export const updateUser = async (req, res) => {
       return res.status(400).json({ message: "Không có dữ liệu nào để cập nhật" });
     }
 
-    params.push(id);
+    params.push(userid);
 
     const sql = `UPDATE users SET ${fields.join(", ")} WHERE id = ?`;
 
