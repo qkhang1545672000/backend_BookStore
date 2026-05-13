@@ -117,3 +117,14 @@ export const getInvoiceForCustom = async (req, res) => {
     return res.status(500).json({ message: "Lỗi hệ thống" });
   }
 };
+
+//3 lấy tất cả hóa đơn 
+export const getAllInvoice = async (req,res) => {
+   try {
+       const [listAllInvoice]= await db.query("select * from invoices"); 
+       res.status(200).json({data:listAllInvoice});
+   } catch (error) {
+     console.error("Lỗi khi gọi getAllInvoice:", error);
+    return res.status(500).json({ message: "Lỗi hệ thống" });
+   }
+}
