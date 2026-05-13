@@ -1,4 +1,6 @@
-import db from "../config/db.js";  
+import db from "../config/db.js";   
+import { isExistUser } from "../data.js";
+//1 Tạo hóa đơn đặt hàng
 export const createInvoice = async (req, res) => {
   const { user_id, total_amount, note, items } = req.body; 
 
@@ -54,7 +56,8 @@ export const createInvoice = async (req, res) => {
       item.book_id,
       item.quantity,
       item.unit_price
-    ]);
+    ]); 
+    console.log(itemData);
 
     await connection.query(
       "INSERT INTO invoice_items (invoice_id, book_id, quantity, unit_price) VALUES ?",
@@ -75,5 +78,42 @@ export const createInvoice = async (req, res) => {
     return res.status(500).json({ success: false, message: "Lỗi hệ thống khi tạo hóa đơn" });
   } finally {
     connection.release();
+  }
+};  
+
+//2 lấy danh sách mà khách hàng đã đặt 
+export const getInvoiceForCustom = async (req, res) => {
+  try {
+    const { userid } = req.params;
+    // 1. Kiểm tra xem người dùng có tồn tại không
+    const [users] = await db.query("SELECT id FROM users WHERE id = ?", [userid]);
+    if (users.length === 0) {
+      return res.status(404).json({ message: "Người dùng không tồn tại" });
+    }
+
+    // 3. Lấy danh sách hóa đơn
+    // Tôi thêm "ORDER BY created_at DESC" để hóa đơn mới nhất hiện lên đầu
+    const [listInvoices] = await db.query(
+      "SELECT * FROM invoices WHERE user_id = ? ORDER BY created_at DESC", 
+      [userid]
+    );
+
+    // 4. Kiểm tra danh sách có rỗng không
+    if (listInvoices.length === 0) {
+      return res.status(200).json({ 
+        message: "Người dùng chưa có hóa đơn nào", 
+        data: [] 
+      });
+    }
+
+    // 5. Trả kết quả thành công
+    return res.status(200).json({
+      message: "Lấy danh sách hóa đơn thành công",
+      data: listInvoices
+    });
+
+  } catch (error) {
+    console.error("Lỗi khi gọi getInvoiceForCustom:", error);
+    return res.status(500).json({ message: "Lỗi hệ thống" });
   }
 };
