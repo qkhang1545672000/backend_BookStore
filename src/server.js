@@ -5,7 +5,8 @@ import path from "path";
 import db from "./config/db.js";
 import bookRoutes from "./routes/bookRoutes.js";
 import categoryRoutes from "./routes/categoryRoutes.js";
-import userRoutes from "./routes/userRoutes.js";
+import userRoutes from "./routes/userRoutes.js"; 
+import invoiceRoutes from "./routes/invoiceRoutes.js";
 import session from "express-session";
 
 dotenv.config();
@@ -36,7 +37,8 @@ app.use(cors({ origin: "http://localhost:5173" }));
 app.use("/api/users", userRoutes);
 app.use("/uploads", express.static(path.join(process.cwd(), "src/uploads")));
 app.use("/api/books", bookRoutes);
-app.use("/api/categorys", categoryRoutes);
+app.use("/api/categorys", categoryRoutes); 
+app.use("/api/invoices", invoiceRoutes);
 
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "../frontend/dist")));
