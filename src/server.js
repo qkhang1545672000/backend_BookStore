@@ -33,7 +33,11 @@ app.use(
   }),
 );
 
-app.use(cors({ origin: "http://localhost:5173" }));
+app.use(cors({
+  origin: "*", // Dấu * đại diện cho tất cả các nguồn
+  methods: ["GET", "POST", "PUT", "DELETE"], // Cho phép các phương thức này
+  allowedHeaders: ["Content-Type", "Authorization"] // Các Header được phép gửi lên
+}));
 app.use("/api/users", userRoutes);
 app.use("/uploads", express.static(path.join(process.cwd(), "src/uploads")));
 app.use("/api/books", bookRoutes);
