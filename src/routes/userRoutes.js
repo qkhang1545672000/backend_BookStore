@@ -16,11 +16,13 @@ import uploadImage from "../middleware/upload.js";
 
 const router = express.Router();
 router.get("/", getAllUsers);
-router.get("/verify/:userid", verifyUser); 
+router.get("/verify/:userid", verifyUser);  
+router.delete("/delete/:userid",deleteUser)
 router.put("/changepassword/:userid",changPassword)
 router.post("/register", register);
 router.post("/login", logIn); 
-router.post("/login/google", googleLogin);
+router.post("/login/google", googleLogin); 
+
 // Route cập nhật User
 router.put(
   "/update/:userid",
