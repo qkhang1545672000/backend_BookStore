@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt";
 import db from "../config/db.js";
 import { transporter } from "./email.js"; // Đảm bảo đường dẫn đúng đến file email.js
-import { OAuth2Client } from "google-auth-library"; 
+import { OAuth2Client } from "google-auth-library";
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 // 1. Lấy danh sách tất cả user
@@ -67,7 +67,7 @@ export const register = async (req, res) => {
     console.error("Lỗi:", error);
     res.status(500).json({ message: "Lỗi hệ thống khi đăng ký" });
   }
-}; 
+};
 // Xác thực user
 export const verifyUser = async (req, res) => {
   try {
@@ -200,9 +200,9 @@ export const deleteUser = async (req, res) => {
     console.error("lỗi khi gọi deleteUser", error);
     res.status(500).json({ message: "Lỗi hệ thống" });
   }
-}; 
+};
 
-// 7. Đổi mật khẩu 
+// 7. Đổi mật khẩu
 export const changPassword = async (req, res) => {
   try {
     const { oldPassword, newPassword } = req.body;
@@ -214,16 +214,20 @@ export const changPassword = async (req, res) => {
     }
 
     // 2. Lấy mật khẩu hiện tại (đã mã hóa) từ Database
-    const [users] = await db.query("SELECT password_hash FROM users WHERE id = ?", [userid]);
+    const [users] = await db.query("SELECT password_hash FROM users WHERE id = ?", [
+      userid,
+    ]);
     const user = users[0];
 
     if (!user) {
       return res.status(404).json({ message: "Người dùng không tồn tại" });
-    } 
+    }
 
     // 3. Kiểm tra mật khẩu mới không được trùng mật khẩu cũ (tùy chọn nhưng nên có)
     if (oldPassword === newPassword) {
-      return res.status(400).json({ message: "Mật khẩu mới không được trùng với mật khẩu cũ" });
+      return res
+        .status(400)
+        .json({ message: "Mật khẩu mới không được trùng với mật khẩu cũ" });
     }
 
     // 4. Kiểm tra mật khẩu cũ có khớp không
@@ -232,21 +236,21 @@ export const changPassword = async (req, res) => {
       return res.status(401).json({ message: "Mật khẩu cũ không chính xác" });
     }
 
-    
-
     // 5. Mã hóa mật khẩu mới và cập nhật Database
     const salt = 10;
     const newPasswordHash = await bcrypt.hash(newPassword, salt);
 
-    await db.query("UPDATE users SET password_hash = ? WHERE id = ?", [newPasswordHash, userid]);
+    await db.query("UPDATE users SET password_hash = ? WHERE id = ?", [
+      newPasswordHash,
+      userid,
+    ]);
 
     return res.status(200).json({ message: "Đổi mật khẩu thành công" });
-
   } catch (error) {
     console.error("Lỗi khi gọi changPassword:", error);
     return res.status(500).json({ message: "Lỗi hệ thống" });
   }
-}; 
+};
 
 // 8. Đăng nhập bằng google
 export const googleLogin = async (req, res) => {
@@ -256,7 +260,7 @@ export const googleLogin = async (req, res) => {
     // Xác thực token với Google
     const ticket = await client.verifyIdToken({
       idToken: idToken,
-      audience: process.env.GOOGLE_CLIENT_ID, 
+      audience: process.env.GOOGLE_CLIENT_ID,
     });
 
     const payload = ticket.getPayload();
@@ -268,28 +272,29 @@ export const googleLogin = async (req, res) => {
 
     if (!user) {
       // Nếu chưa có user thì INSERT mới vào DB
-     const [result] = await db.query(
-  // 1. Thêm password_hash vào danh sách cột
-  "INSERT INTO users (username, email, full_name, avatar, role, is_active, password_hash) VALUES (?, ?, ?, ?, 'customer', 1, ?)",
-  [
-    email.split('@')[0], 
-    email, 
-    name, 
-    picture, 
-    "GOOGLE_AUTH_NO_PASSWORD" // 2. Truyền giá trị này vào dấu ? cuối cùng
-  ]
-);
-    
-  const [newUser] = await db.query("SELECT * FROM users WHERE id = ?", [result.insertId]);
-  user = newUser[0]; // Gán lại cho biến user
+      const [result] = await db.query(
+        // 1. Thêm password_hash vào danh sách cột
+        "INSERT INTO users (username, email, full_name, avatar, role, is_active, password_hash) VALUES (?, ?, ?, ?, 'customer', 1, ?)",
+        [
+          email.split("@")[0],
+          email,
+          name,
+          picture,
+          "GOOGLE_AUTH_NO_PASSWORD", // 2. Truyền giá trị này vào dấu ? cuối cùng
+        ],
+      );
+
+      const [newUser] = await db.query("SELECT * FROM users WHERE id = ?", [
+        result.insertId,
+      ]);
+      user = newUser[0]; // Gán lại cho biến user
     }
 
     // Trả về thông tin cho Frontend
     res.status(200).json({
       message: "Xác thực Google thành công",
-      data: { id: user.id, username: user.username, avatar: user.avatar }
+      data: { id: user.id, username: user.username, avatar: user.avatar },
     });
-
   } catch (error) {
     console.error("Lỗi xác thực:", error);
     res.status(401).json({ message: "Xác thực không hợp lệ" });
